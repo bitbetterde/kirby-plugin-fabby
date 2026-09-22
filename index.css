@@ -1,0 +1,79 @@
+.k-fabby-rag-status {
+  padding: var(--spacing-6);
+}
+
+.k-fabby-rag-status__heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  width: 100%;
+}
+
+.k-fabby-rag-status__heading > .k-icon {
+  margin-top: 0.15rem;
+}
+
+.k-fabby-rag-status__heading > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.k-fabby-rag-status__heading h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  line-height: 1.25;
+}
+
+.k-fabby-rag-status__heading p,
+.k-fabby-rag-detail,
+.k-fabby-rag-error,
+.k-fabby-rag-maintenance p {
+  margin-top: var(--spacing-2);
+  line-height: 1.5;
+}
+
+.k-fabby-rag-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
+}
+
+.k-fabby-rag-progress__bar {
+  flex: 1;
+  height: 0.65rem;
+  overflow: hidden;
+  border-radius: var(--rounded);
+  background: var(--color-gray-300);
+}
+
+.k-fabby-rag-progress__bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-blue-600);
+  transition: width 180ms ease;
+}
+
+.k-fabby-rag-error {
+  color: var(--color-red-700);
+}
+
+.k-fabby-rag-buttons {
+  margin-top: var(--spacing-5);
+}
+
+.k-fabby-rag-maintenance {
+  margin-top: var(--spacing-5);
+  padding: var(--spacing-4) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.k-fabby-rag-maintenance summary {
+  width: max-content;
+  cursor: pointer;
+  font-weight: var(--font-bold);
+}
+
+.k-fabby-rag-maintenance .k-button-group {
+  margin-top: var(--spacing-3);
+}

@@ -1,0 +1,516 @@
+title: Fabby
+icon: chat
+options:
+  changeSlug: false
+  changeStatus: false
+  changeTemplate: false
+  create: false
+  delete: false
+  duplicate: false
+
+# Genau zwei Tabs, getrennt nach Zustaendigkeit:
+#
+#   inhalt   - was die Redaktion pflegt. Nichts darin kann Kosten
+#              verursachen oder den Betrieb unterbrechen.
+#   technik  - Keys, Endpunkte, Limits, Index-Parameter.
+#
+# Den Tab `technik` sehen nur Admins: die Blueprint-Registrierung in
+# index.php laedt diese Datei ueber ein Callable und setzt den Tab fuer
+# alle anderen Rollen auf `false`. Geschuetzt - und nicht nur versteckt -
+# werden die Felder vom `page.update:before`-Hook daneben, der die
+# Feldnamen wiederum aus genau diesem Tab liest. Ein neues Feld hier ist
+# damit automatisch mitgeschuetzt.
+tabs:
+  inhalt:
+    label: Inhalt & Sprache
+    icon: chat
+    # Dieser Tab mischt normale Felder mit zwei echten Sections
+    # (fabby-rag, stats). Kirby laesst das nur ueber `sections:` zu -
+    # Felder kommen dann als `type: fields`-Sections herein. Unter
+    # `fields:` wuerde Kirby den Tab wegen der Sections gar nicht erst
+    # rendern, und zwar ohne Fehlermeldung.
+    sections:
+      prompt_fields:
+        type: fields
+        fields:
+          system_prompt_info:
+            type: info
+            text: >
+              Der Gesprächsverlauf wird dem Modell als ein einzelner Text im
+              Format "User: ..." / "You: ..." übergeben (siehe React-Client
+              src/chat/history.ts). Der Prompt sollte diese Konvention
+              weiterhin voraussetzen — eine Änderung des Formats erfordert
+              auch eine Anpassung des React-Widgets.
+          system_prompt:
+            label: Persönlichkeit & Verhalten
+            type: textarea
+            size: huge
+            required: true
+            buttons: false
+            help: >
+              Statischer Basis-Prompt. Das aktuelle Datum und die
+              Event-Filterregeln werden automatisch angehängt und müssen hier
+              nicht enthalten sein.
+
+      tools_fields:
+        type: fields
+        fields:
+          # Die drei rag_*-Felder dieser Structure sind technischer Natur
+          # und stehen trotzdem hier: Sie gehoeren zu einer Tool-Zeile und
+          # liegen in deren Datensatz (ToolRegistry liest sie aus der Zeile,
+          # nicht aus einem eigenen Feld). Ein Umzug in den Tab `technik`
+          # wuerde bestehende Werte stillschweigend auf die Defaults
+          # zuruecksetzen - es gibt keine Content-Migration. Alle drei sind
+          # geklammert und nur bei knowledge_search sichtbar.
+          #
+          # Sie liegen damit auch ausserhalb des Admin-Schutzes fuer den
+          # Tab `technik`. Das ist vertretbar: Treffer-Anzahl, Mindest-
+          # Aehnlichkeit und Ergebnislaenge justieren nur die Suche im
+          # bereits gebauten Index - kein Key, kein Endpunkt, keine Kosten.
+          tools:
+            label: Verfügbare Tools
+            type: structure
+            help: >
+              Nur registrierte Tool-Namen sind wirksam (aktuell: web_search,
+              knowledge_search). Ein neuer Tool-Typ erfordert zusätzlichen
+              Plugin-Code.
+            fields:
+              name:
+                label: Tool
+                type: select
+                required: true
+                options:
+                  web_search: Web-Suche (Google)
+                  knowledge_search: Wissensdatenbank (Seiteninhalte)
+              enabled:
+                label: Aktiv
+                type: toggle
+                default: true
+              description:
+                label: Beschreibung (optional, überschreibt Standard)
+                type: text
+              domains:
+                label: Erlaubte Domains (eine pro Zeile)
+                type: textarea
+                when:
+                  name: web_search
+                default: |
+                  https://www.fab-bergisch.org/
+                  https://www.cscp.org/
+                  https://www.cscp.org/library/publications/
+                  https://gruenderschmiede.org/
+                  https://www.glaeserne-werkstatt-solingen.de/
+                  https://www.fab-bergisch.org/aktuelles/events/
+                  https://www.gut-einern.org/
+              rag_top_k:
+                label: Anzahl Treffer (Top-K)
+                type: number
+                default: 5
+                min: 1
+                max: 20
+                when:
+                  name: knowledge_search
+                help: >
+                  Wie viele Textabschnitte an das Modell übergeben werden.
+                  Technischer Feinschliff — im Zweifel den Standardwert lassen.
+              rag_min_similarity:
+                label: Mindest-Ähnlichkeit
+                type: number
+                default: 0.25
+                min: 0
+                max: 1
+                step: 0.05
+                when:
+                  name: knowledge_search
+                help: >
+                  Semantische Vektortreffer unterhalb dieser Ähnlichkeit werden
+                  verworfen. Validierte Treffer mit passenden Suchbegriffen
+                  können unabhängig davon in die Rangfolge gelangen. 0.2 bis
+                  0.35 ist ein guter Bereich. Technischer Feinschliff — im
+                  Zweifel den Standardwert lassen.
+              rag_max_chars:
+                label: Max. Zeichen im Tool-Ergebnis
+                type: number
+                default: 4000
+                min: 500
+                max: 12000
+                when:
+                  name: knowledge_search
+                help: >
+                  Technischer Feinschliff — im Zweifel den Standardwert lassen.
+
+      rag_workflow:
+        type: fabby-rag
+
+      rag_stats:
+        type: stats
+        size: small
+        # stats ist eine Section, kein Field — unter `fields:` wuerde Kirby
+        # den Tab gar nicht erst rendern.
+        # Bare query, ohne {{ }}: Stats::from() gibt den String direkt an
+        # $model->query() weiter, und das versteht die Klammern nicht.
+        reports: "page.fabbyRagReports"
+
+      rag_fields:
+        type: fields
+        fields:
+          rag_info:
+            type: info
+            label: Status
+            theme: info
+            text: >
+              Die Wissensdatenbank durchsucht die Inhalte dieser Kirby-Installation.
+              Seiten werden beim Speichern automatisch zur Neu-Indexierung
+              vorgemerkt und im Hintergrund verarbeitet — das Speichern selbst wird
+              dadurch nicht langsamer.
+
+
+              Damit der Chatbot sie nutzt, muss weiter oben auf dieser Seite eine
+              Zeile mit dem Tool `knowledge_search` angelegt und aktiviert sein.
+              Das Embedding-Modell und die Index-Parameter stehen im Tab „Technik".
+
+
+              Alternativ per Kommandozeile aufbauen oder Änderungen verarbeiten:
+              `php tools/fabby-index.php --rebuild` bzw. `--queue` im
+              Plugin-Verzeichnis.
+          rag_enabled:
+            label: Automatische Indexierung
+            type: toggle
+            default: true
+            help: >
+              Merkt Seiten beim Speichern für die Neu-Indexierung vor.
+          rag_listed_only:
+            label: Nur gelistete Seiten indizieren
+            type: toggle
+            default: false
+            help: >
+              Aus (Standard): alle veröffentlichten Seiten, also auch „unlisted".
+              Die sind per URL öffentlich erreichbar — für einen Chatbot, der auf
+              Seiten verweist, in der Regel genau richtig.
+
+
+              An: nur Seiten mit Status „gelistet". Sinnvoll, wenn „unlisted" bei
+              euch ein Zwischenstand ist. ACHTUNG: Sind alle Seiten unlisted, wird
+              damit gar nichts mehr indiziert. Nach dem Umschalten
+              `php tools/fabby-index.php --force` ausführen.
+
+      voice_fields:
+        type: fields
+        fields:
+          voice_headline:
+            label: Sprachausgabe
+            type: headline
+          tts_enabled:
+            label: Sprachausgabe aktiv
+            type: toggle
+            default: true
+          tts_voice_id:
+            label: ElevenLabs Voice ID
+            type: text
+            default: ZoOA7WxUFh7TRhFesMac
+          tts_model:
+            label: ElevenLabs Modell
+            type: text
+            default: eleven_flash_v2_5
+            help: >
+              `eleven_flash_v2_5` ist der Nachfolger des abgekündigten
+              `eleven_turbo_v2_5` — gleicher Preis, niedrigere Latenz.
+              `eleven_multilingual_v2` spricht Zahlen und Datumsangaben
+              sauberer aus, kostet aber das Doppelte und ignoriert die
+              Sprachvorgabe (`language_code`) des Plugins.
+          tts_stability:
+            label: Stability
+            type: range
+            min: 0
+            max: 1
+            step: 0.1
+            default: 1
+          tts_similarity_boost:
+            label: Similarity Boost
+            type: range
+            min: 0
+            max: 1
+            step: 0.1
+            default: 1
+          tts_style:
+            label: Style
+            type: range
+            min: 0
+            max: 1
+            step: 0.1
+            default: 0
+          tts_speed:
+            label: Speed
+            type: range
+            min: 0.5
+            max: 1.5
+            step: 0.1
+            default: 0.9
+
+      widget_fields:
+        type: fields
+        fields:
+          widget_headline:
+            label: Darstellung
+            type: headline
+          audio_message_bubble:
+            label: Sprachaufnahmen als Audio-Nachricht
+            type: toggle
+            default: false
+            text:
+              - Transkribierten Text zeigen
+              - Waveform zeigen
+            help: >
+              An zeigt gesendete Aufnahmen als nicht abspielbare Waveform.
+              Aus zeigt den transkribierten Text. Für Fabbys Antwort wird in
+              beiden Fällen intern das Transkript verwendet.
+
+  technik:
+    label: Technik
+    icon: settings
+    columns:
+      # Links das, was beim Einrichten von oben nach unten durchgearbeitet
+      # wird; rechts die Werte, die man danach nur noch selten justiert.
+      - width: 1/2
+        fields:
+          keys_headline:
+            label: API-Keys & Zugänge
+            type: headline
+          keys_info:
+            type: info
+            theme: notice
+            text: >
+              Diese Werte landen als Klartext in der Content-Datei dieser
+              Seite (nicht im Git-Repo, da `content/` grundsätzlich nicht
+              versioniert wird) und sind für jeden mit Panel-Zugriff auf diese
+              Seite sichtbar. Ein hier eingetragener Wert hat Vorrang vor der
+              Kirby-Konfiguration und einer Server-Umgebungsvariable (z.B.
+              FABBY_OPENAI_API_KEY in der .env). Bleibt das Feld leer, dienen
+              diese externen Werte weiterhin als Fallback.
+          openai_api_key:
+            label: OpenAI API Key (Fallback/Whisper)
+            type: text
+            autocomplete: off
+            help: >
+              Bleibt für bestehende Installationen als Fallback erhalten und wird
+              weiterhin für die Spracherkennung (Whisper) genutzt.
+          llm_api_key:
+            label: Completion API Key (optional)
+            type: text
+            autocomplete: off
+            help: Leer = OpenAI API Key verwenden. Bei keylosen lokalen APIs leer lassen.
+          rag_embedding_api_key:
+            label: Embedding API Key (optional)
+            type: text
+            autocomplete: off
+            help: Leer = Completion API Key verwenden.
+          elevenlabs_api_key:
+            label: ElevenLabs API Key
+            type: text
+            autocomplete: off
+            help: Wird für die Sprachausgabe (TTS) genutzt.
+          google_search_api_key:
+            label: Google Search API Key
+            type: text
+            autocomplete: off
+          google_search_engine_id:
+            label: Google Custom Search Engine ID
+            type: text
+            help: Kein Geheimnis im engeren Sinn, aber Teil derselben Google-CSE-Konfiguration.
+
+          chat_headline:
+            label: Antworten (Chat)
+            type: headline
+          llm_provider:
+            label: Schnittstelle
+            type: select
+            required: true
+            default: openai
+            options:
+              openai: OpenAI-kompatibel (inkl. OpenAI)
+            help: >
+              Verwendet das OpenAI-kompatible Chat-Completions-Format. Bei
+              aktivierten Fabby-Tools muss das gewählte Modell Tool-Calling
+              unterstützen.
+          llm_base_url:
+            label: Completion API Basis-URL
+            type: url
+            default: https://api.openai.com/v1
+            placeholder: http://100.68.73.25:8080/v1
+            help: >
+              URL bis einschließlich des API-Präfixes, meist `/v1`. Ein
+              abschließender Schrägstrich ist optional; Fabby ergänzt
+              `/chat/completions`. Leer nutzt Kirby-/Umgebungskonfiguration
+              und danach den OpenAI-Standard.
+          llm_model:
+            label: Modell
+            type: text
+            required: true
+            default: gpt-4o
+            help: z.B. gpt-4o, gpt-4o-mini
+          max_tokens:
+            label: Max. Tokens pro Antwort
+            type: number
+            min: 50
+            max: 4000
+            default: 1000
+
+          embedding_headline:
+            label: Embeddings (Wissensdatenbank)
+            type: headline
+          embedding_info:
+            type: info
+            theme: info
+            text: >
+              Das Embedding-Modell wandelt Seiteninhalte und Suchanfragen in
+              Vektoren um — es ist ein anderes Modell als das oben gewählte
+              und kann auf einer anderen API liegen. Betrieb und Aufbau des
+              Indexes stehen im Tab „Inhalt & Sprache".
+
+
+              Eine Änderung von Modell, Dimensionen oder URL macht den
+              bestehenden Index unbrauchbar; er muss danach vollständig neu
+              aufgebaut werden.
+          rag_embedding_base_url:
+            label: Embedding API Basis-URL (optional)
+            type: url
+            placeholder: http://100.68.73.25:8080/v1
+            help: >
+              Leer = Completion API Basis-URL. Fabby ergänzt `/embeddings`.
+          rag_embedding_model:
+            label: Embedding-Modell
+            type: text
+            required: true
+            default: text-embedding-3-small
+            help: >
+              Freier Modellname der Embeddings-API, z.B.
+              `text-embedding-3-small` oder `nomic-embed-text-v1.5`.
+          rag_embedding_dimensions:
+            label: Embedding-Dimensionen
+            type: number
+            required: true
+            default: 1536
+            min: 1
+            max: 32768
+            help: >
+              Native Breite des Modells, z.B. 1536 für
+              `text-embedding-3-small`, 3072 für `text-embedding-3-large`
+              oder 768 für `nomic-embed-text-v1.5`.
+
+      - width: 1/2
+        fields:
+          rag_tuning_headline:
+            label: Wissensdatenbank — Technik
+            type: headline
+          rag_chunk_chars:
+            label: Chunk-Größe (Zeichen)
+            type: number
+            default: 1200
+            min: 300
+            max: 4000
+          rag_chunk_overlap:
+            label: Chunk-Überlappung (Zeichen)
+            type: number
+            default: 200
+            min: 0
+            max: 1000
+          rag_base_url:
+            label: Basis-URL für Quellenangaben (optional)
+            type: text
+            placeholder: https://www.fab-bergisch.org
+            help: >
+              Wird den Seiten-URLs in den Suchergebnissen vorangestellt, damit der
+              Chatbot einen vollständigen Link ausgeben kann. Leer = die
+              `url`-Einstellung der Kirby-Site. Ist auch die nicht gesetzt, kennt
+              der Chatbot nur den Pfad und würde die Domain sonst raten.
+          rag_sqlite_vec_file:
+            label: sqlite-vec Dateiname (optional)
+            type: text
+            placeholder: vec0.dylib
+            help: >
+              Nur der Dateiname, nicht der Pfad — PHP lädt Erweiterungen
+              ausschließlich aus dem in der php.ini gesetzten Verzeichnis
+              `sqlite3.extension_dir`. Ohne diese php.ini-Einstellung (sie lässt
+              sich zur Laufzeit nicht setzen) läuft die Suche im PHP-Fallback —
+              bei dieser Website-Größe vollkommen ausreichend.
+          rag_db_path:
+            label: Datenbank-Pfad (optional)
+            type: text
+            help: >
+              Leer = site/logs/fabby-rag/index.sqlite. Das Verzeichnis muss für den
+              Webserver beschreibbar sein und darf beim Deployment nicht zusammen
+              mit dem Cache geleert werden.
+
+          limits_headline:
+            label: API-Schutz
+            type: headline
+          rate_limit_info:
+            type: info
+            theme: notice
+            text: >
+              Begrenzt die kostenpflichtigen Chat-, Sprach- und RAG-Aufrufe.
+              Tageslimits gelten serverweit und werden um 00:00 UTC zurückgesetzt.
+          rate_limit_enabled:
+            label: Rate-Limits aktiv
+            type: toggle
+            default: true
+          rate_init_ip_minute:
+            label: Nonce-Ausgabe pro IP/Minute
+            type: number
+            min: 1
+            max: 50000
+            default: 60
+          rate_question_session_minute:
+            label: Chat pro Sitzung/Minute
+            type: number
+            min: 1
+            max: 10000
+            default: 10
+          rate_question_ip_minute:
+            label: Chat pro IP/Minute
+            type: number
+            min: 1
+            max: 50000
+            default: 50
+          rate_question_daily:
+            label: Chat serverweit/Tag
+            type: number
+            min: 1
+            max: 1000000
+            default: 500
+          rate_stt_session_minute:
+            label: Spracherkennung pro Sitzung/Minute
+            type: number
+            min: 1
+            max: 10000
+            default: 5
+          rate_stt_ip_minute:
+            label: Spracherkennung pro IP/Minute
+            type: number
+            min: 1
+            max: 50000
+            default: 25
+          rate_stt_daily:
+            label: Spracherkennung serverweit/Tag
+            type: number
+            min: 1
+            max: 1000000
+            default: 200
+          rate_tts_session_minute:
+            label: Sprachausgabe pro Sitzung/Minute
+            type: number
+            min: 1
+            max: 10000
+            default: 20
+          rate_tts_ip_minute:
+            label: Sprachausgabe pro IP/Minute
+            type: number
+            min: 1
+            max: 50000
+            default: 100
+          rate_tts_daily:
+            label: Sprachausgabe serverweit/Tag
+            type: number
+            min: 1
+            max: 1000000
+            default: 1000

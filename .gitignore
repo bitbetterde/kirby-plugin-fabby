@@ -1,0 +1,15 @@
+# Echte Schlüssel gehören nie ins Repo.
+.env
+.env.*
+
+# RAG-Index (SQLite). Liegt normalerweise unter site/logs der Host-Site,
+# kann bei lokalen Tests aber auch hier landen.
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# macOS / Editoren
+.DS_Store
+.idea/
+.vscode/
+*.swp
