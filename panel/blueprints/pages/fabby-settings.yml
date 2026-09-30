@@ -8,10 +8,13 @@ options:
   delete: false
   duplicate: false
 
-# Genau zwei Tabs, getrennt nach Zustaendigkeit:
+# Drei Tabs, getrennt nach Zustaendigkeit:
 #
 #   inhalt   - was die Redaktion pflegt. Nichts darin kann Kosten
 #              verursachen oder den Betrieb unterbrechen.
+#   audio    - Sprachausgabe (Stimme, Modell, Klangparameter) und die
+#              Darstellung von Sprachaufnahmen. Ebenfalls redaktionell;
+#              der ElevenLabs-Key bleibt unter `technik`.
 #   technik  - Keys, Endpunkte, Limits, Index-Parameter.
 #
 # Den Tab `technik` sehen nur Admins: die Blueprint-Registrierung in
@@ -22,25 +25,26 @@ options:
 # damit automatisch mitgeschuetzt.
 tabs:
   inhalt:
-    label: Inhalt & Sprache
+    label: Inhalt
     icon: chat
-    # Dieser Tab mischt normale Felder mit zwei echten Sections
-    # (fabby-rag, stats). Kirby laesst das nur ueber `sections:` zu -
+    # Dieser Tab mischt normale Felder mit einer echten Section
+    # (fabby-rag). Kirby laesst das nur ueber `sections:` zu -
     # Felder kommen dann als `type: fields`-Sections herein. Unter
     # `fields:` wuerde Kirby den Tab wegen der Sections gar nicht erst
     # rendern, und zwar ohne Fehlermeldung.
+    # Drei sichtbare Gruppen: System-Prompt, Tools, RAG. Eine
+    # `fields`-Section rendert kein `label`, deshalb tragen die ersten
+    # beiden Gruppen ein `headline`-Feld (wie der Tab `technik`). Die
+    # RAG-Gruppe beginnt mit der interaktiven Status-Section, die ihr
+    # `label` selbst in derselben Optik rendert; die Felder darunter
+    # gehoeren optisch dazu und bleiben ohne eigene Ueberschrift.
     sections:
       prompt_fields:
         type: fields
         fields:
-          system_prompt_info:
-            type: info
-            text: >
-              Der Gesprächsverlauf wird dem Modell als ein einzelner Text im
-              Format "User: ..." / "You: ..." übergeben (siehe React-Client
-              src/chat/history.ts). Der Prompt sollte diese Konvention
-              weiterhin voraussetzen — eine Änderung des Formats erfordert
-              auch eine Anpassung des React-Widgets.
+          prompt_headline:
+            label: System-Prompt
+            type: headline
           system_prompt:
             label: Persönlichkeit & Verhalten
             type: textarea
@@ -55,6 +59,9 @@ tabs:
       tools_fields:
         type: fields
         fields:
+          tools_headline:
+            label: Tools
+            type: headline
           # Die drei rag_*-Felder dieser Structure sind technischer Natur
           # und stehen trotzdem hier: Sie gehoeren zu einer Tool-Zeile und
           # liegen in deren Datensatz (ToolRegistry liest sie aus der Zeile,
@@ -139,46 +146,40 @@ tabs:
                 help: >
                   Technischer Feinschliff — im Zweifel den Standardwert lassen.
 
+      chat_fields:
+        type: fields
+        fields:
+          chat_headline:
+            label: Chatverlauf
+            type: headline
+          chat_persistence:
+            label: Chatverlauf im Browser speichern
+            type: toggle
+            default: false
+            text:
+              - Nur bis zum Neuladen
+              - 24 Stunden im Browser behalten
+            help: >
+              An: Der Chat wird im Browser des Besuchers (localStorage)
+              gespeichert und übersteht so ein Neuladen der Seite. Er bleibt
+              dabei auf dem Gerät des Besuchers — er wird nicht übertragen und
+              ist für uns nicht einsehbar. Nach 24 Stunden wird er verworfen,
+              und der Besucher kann ihn jederzeit über den Papierkorb in der
+              Kopfzeile selbst löschen.
+
       rag_workflow:
         type: fabby-rag
-
-      rag_stats:
-        type: stats
-        size: small
-        # stats ist eine Section, kein Field — unter `fields:` wuerde Kirby
-        # den Tab gar nicht erst rendern.
-        # Bare query, ohne {{ }}: Stats::from() gibt den String direkt an
-        # $model->query() weiter, und das versteht die Klammern nicht.
-        reports: "page.fabbyRagReports"
+        label: RAG
 
       rag_fields:
         type: fields
         fields:
-          rag_info:
-            type: info
-            label: Status
-            theme: info
-            text: >
-              Die Wissensdatenbank durchsucht die Inhalte dieser Kirby-Installation.
-              Seiten werden beim Speichern automatisch zur Neu-Indexierung
-              vorgemerkt und im Hintergrund verarbeitet — das Speichern selbst wird
-              dadurch nicht langsamer.
-
-
-              Damit der Chatbot sie nutzt, muss weiter oben auf dieser Seite eine
-              Zeile mit dem Tool `knowledge_search` angelegt und aktiviert sein.
-              Das Embedding-Modell und die Index-Parameter stehen im Tab „Technik".
-
-
-              Alternativ per Kommandozeile aufbauen oder Änderungen verarbeiten:
-              `php tools/fabby-index.php --rebuild` bzw. `--queue` im
-              Plugin-Verzeichnis.
           rag_enabled:
             label: Automatische Indexierung
             type: toggle
             default: true
             help: >
-              Merkt Seiten beim Speichern für die Neu-Indexierung vor.
+              Merkt Seiten beim Speichern automatisch für die Neu-Indexierung vor.
           rag_listed_only:
             label: Nur gelistete Seiten indizieren
             type: toggle
@@ -189,81 +190,77 @@ tabs:
               Seiten verweist, in der Regel genau richtig.
 
 
-              An: nur Seiten mit Status „gelistet". Sinnvoll, wenn „unlisted" bei
-              euch ein Zwischenstand ist. ACHTUNG: Sind alle Seiten unlisted, wird
-              damit gar nichts mehr indiziert. Nach dem Umschalten
+              An: nur Seiten mit Status „gelistet werden indiziert". Sinnvoll, wenn „unlisted"-Seiten nicht vom Bot berücksichtigt werden sollen. Nach dem Umschalten
               `php tools/fabby-index.php --force` ausführen.
 
-      voice_fields:
-        type: fields
-        fields:
-          voice_headline:
-            label: Sprachausgabe
-            type: headline
-          tts_enabled:
-            label: Sprachausgabe aktiv
-            type: toggle
-            default: true
-          tts_voice_id:
-            label: ElevenLabs Voice ID
-            type: text
-            default: ZoOA7WxUFh7TRhFesMac
-          tts_model:
-            label: ElevenLabs Modell
-            type: text
-            default: eleven_flash_v2_5
-            help: >
-              `eleven_flash_v2_5` ist der Nachfolger des abgekündigten
-              `eleven_turbo_v2_5` — gleicher Preis, niedrigere Latenz.
-              `eleven_multilingual_v2` spricht Zahlen und Datumsangaben
-              sauberer aus, kostet aber das Doppelte und ignoriert die
-              Sprachvorgabe (`language_code`) des Plugins.
-          tts_stability:
-            label: Stability
-            type: range
-            min: 0
-            max: 1
-            step: 0.1
-            default: 1
-          tts_similarity_boost:
-            label: Similarity Boost
-            type: range
-            min: 0
-            max: 1
-            step: 0.1
-            default: 1
-          tts_style:
-            label: Style
-            type: range
-            min: 0
-            max: 1
-            step: 0.1
-            default: 0
-          tts_speed:
-            label: Speed
-            type: range
-            min: 0.5
-            max: 1.5
-            step: 0.1
-            default: 0.9
+  audio:
+    label: Audio
+    icon: audio
+    fields:
+      voice_headline:
+        label: Sprachausgabe
+        type: headline
+      tts_enabled:
+        label: Sprachausgabe aktiv
+        type: toggle
+        default: true
+      tts_voice_id:
+        label: ElevenLabs Voice ID
+        type: text
+        default: ZoOA7WxUFh7TRhFesMac
+      tts_model:
+        label: ElevenLabs Modell
+        type: text
+        default: eleven_flash_v2_5
+        help: >
+          `eleven_flash_v2_5` ist der Nachfolger des abgekündigten
+          `eleven_turbo_v2_5` — gleicher Preis, niedrigere Latenz.
+          `eleven_multilingual_v2` spricht Zahlen und Datumsangaben
+          sauberer aus, kostet aber das Doppelte und ignoriert die
+          Sprachvorgabe (`language_code`) des Plugins.
+      tts_stability:
+        label: Stability
+        type: range
+        min: 0
+        max: 1
+        step: 0.1
+        default: 1
+      tts_similarity_boost:
+        label: Similarity Boost
+        type: range
+        min: 0
+        max: 1
+        step: 0.1
+        default: 1
+      tts_style:
+        label: Style
+        type: range
+        min: 0
+        max: 1
+        step: 0.1
+        default: 0
+      tts_speed:
+        label: Speed
+        type: range
+        min: 0.5
+        max: 1.5
+        step: 0.1
+        default: 0.9
 
-      widget_fields:
-        type: fields
-        fields:
-          widget_headline:
-            label: Darstellung
-            type: headline
-          audio_message_bubble:
-            label: Sprachaufnahmen als Audio-Nachricht
-            type: toggle
-            default: false
-            text:
-              - Transkribierten Text zeigen
-              - Waveform zeigen
-            help: >
-              An zeigt gesendete Aufnahmen als nicht abspielbare Waveform.
-              Aus zeigt den transkribierten Text. Für Fabbys Antwort wird in
-              beiden Fällen intern das Transkript verwendet.
+      recording_headline:
+        label: Sprachaufnahmen
+        type: headline
+      audio_message_bubble:
+        label: Sprachaufnahmen als Audio-Nachricht
+        type: toggle
+        default: false
+        text:
+          - Transkribierten Text zeigen
+          - Waveform zeigen
+        help: >
+          An zeigt gesendete Aufnahmen als nicht abspielbare Waveform.
+          Aus zeigt den transkribierten Text. Für Fabbys Antwort wird in
+          beiden Fällen intern das Transkript verwendet.
 
   technik:
     label: Technik
@@ -365,7 +362,7 @@ tabs:
               Das Embedding-Modell wandelt Seiteninhalte und Suchanfragen in
               Vektoren um — es ist ein anderes Modell als das oben gewählte
               und kann auf einer anderen API liegen. Betrieb und Aufbau des
-              Indexes stehen im Tab „Inhalt & Sprache".
+              Indexes stehen im Tab „Inhalt".
 
 
               Eine Änderung von Modell, Dimensionen oder URL macht den

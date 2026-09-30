@@ -609,19 +609,14 @@ App::plugin('ontostory/fabby', [
         'fabby' => __DIR__ . '/snippets/fabby.php',
     ],
 
-    'pageMethods' => [
-        // Feeds the stats section on the "Inhalt & Sprache" tab.
-        'fabbyRagReports' => function (): array {
-            return (new Fabby\Rag\PanelReports(
-                kirby(),
-                new Fabby\Config\FabbyConfig(kirby())
-            ))->reports();
-        },
-    ],
-
     'sections' => [
         'fabby-rag' => [
             'props' => [
+                // Section headline from the blueprint (`label:`), same
+                // convention as Kirby's own sections.
+                'label' => fn ($label = null) => $label === null
+                    ? null
+                    : Kirby\Toolkit\I18n::translate($label, $label),
                 'status' => fn (): array => fabbyRagWorkflowStatus(),
             ],
         ],
@@ -650,6 +645,26 @@ App::plugin('ontostory/fabby', [
             'icon' => 'chat',
             'menu' => true,
             'link' => 'pages/fabby-settings',
+            // Kirby markiert einen Menueeintrag als aktiv, wenn die Id der
+            // gerade gerenderten Area mit der Id des Eintrags uebereinstimmt
+            // (Panel\Menu::isCurrent). Diese Area hat aber keine eigene View;
+            // ihr Link fuehrt in die Kern-Area `site`. Die Id passt also nie,
+            // und der Eintrag bliebe fuer immer inaktiv. `current` erlaubt
+            // eine eigene Entscheidung: aktiv, sobald der Panel-Pfad die
+            // Einstellungsseite ist. Der Panel-Slug ist konfigurierbar,
+            // deshalb wird er aus der Option gelesen statt hart verdrahtet.
+            'current' => function (string|null $current): bool {
+                if ($current !== 'site') {
+                    return false;
+                }
+
+                $kirby = App::instance();
+                $slug  = trim((string)$kirby->option('panel.slug', 'panel'), '/');
+                $path  = trim($kirby->path(), '/');
+
+                return $path === $slug . '/pages/fabby-settings'
+                    || str_starts_with($path, $slug . '/pages/fabby-settings/');
+            },
             'dialogs' => [
                 'fabby.rag.rebuild' => array_merge(
                     ['pattern' => 'fabby/rag/rebuild'],
