@@ -1,5 +1,8 @@
-.k-fabby-rag-status {
-  padding: var(--spacing-6);
+/* Mirrors a headline field: normal weight, and the same 2rem distance
+   to the next element that Kirby's field grid puts below a headline. */
+.k-fabby-rag-headline {
+  font-weight: var(--font-normal);
+  margin-bottom: var(--spacing-8);
 }
 
 .k-fabby-rag-status__heading {
@@ -68,9 +71,7 @@
   border-top: 1px solid var(--color-border);
 }
 
-.k-fabby-rag-maintenance summary {
-  width: max-content;
-  cursor: pointer;
+.k-fabby-rag-maintenance h3 {
   font-weight: var(--font-bold);
 }
 

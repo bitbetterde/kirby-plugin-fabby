@@ -141,9 +141,10 @@ Der Status ist im Panel unter *Fabby → Technik* sichtbar.
 
 ## Panel-Struktur
 
-Die Seite *Fabby* hat zwei Tabs:
+Die Seite *Fabby* hat drei Tabs:
 
-- **Inhalt & Sprache** — redaktionell: System-Prompt, Begrüßung, Stimme, Statistik
+- **Inhalt** — redaktionell, in drei Gruppen: System-Prompt, Tools, RAG
+- **Audio** — Sprachausgabe (Stimme, Modell, Klangparameter) und Darstellung von Sprachaufnahmen
 - **Technik** — API-Keys, Endpunkte, Modelle, Limits, RAG
 
 Den Tab **Technik sehen nur Administratoren**. Alle anderen Rollen bekommen ihn
