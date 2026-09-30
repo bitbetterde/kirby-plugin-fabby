@@ -216,13 +216,14 @@ class FabbyConfig
      * spart den Request, der ohnehin abgelehnt wuerde. Die eigentliche Sperre
      * sitzt in FabbyService::textToAudio() und bleibt davon unberuehrt.
      *
-     * @return array{audioMessageDisplay: string, ttsEnabled: bool}
+     * @return array{audioMessageDisplay: string, ttsEnabled: bool, chatPersistence: bool}
      */
     public function widgetTheme(): array
     {
         return [
             'audioMessageDisplay' => $this->audioMessageDisplay(),
             'ttsEnabled' => $this->ttsEnabled(),
+            'chatPersistence' => $this->chatPersistenceEnabled(),
         ];
     }
 
@@ -233,6 +234,25 @@ class FabbyConfig
         $enabled = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
 
         return $enabled ? 'audio' : 'transcript';
+    }
+
+    /**
+     * Darf der Chatverlauf im localStorage des Besuchers liegen?
+     *
+     * Default aus: Speichern im Browser ist eine Datenschutzentscheidung, die
+     * die Redaktion ausdruecklich treffen muss - anders als bei ttsEnabled()
+     * waere ein stillschweigendes "an" hier die falsche Voreinstellung.
+     * Deshalb prueft die JS-Seite zusaetzlich strikt auf `=== true`
+     * (widget/src/widget/theme.ts).
+     *
+     * filter_var() aus demselben Grund wie bei ttsEnabled(): Kirby legt
+     * Toggles als String ab, und `(bool) 'false'` ist true.
+     */
+    public function chatPersistenceEnabled(): bool
+    {
+        $value = $this->setting('chat_persistence', false);
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     // --- RAG / Wissensdatenbank --------------------------------------------

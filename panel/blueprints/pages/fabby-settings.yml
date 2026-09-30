@@ -146,6 +146,27 @@ tabs:
                 help: >
                   Technischer Feinschliff — im Zweifel den Standardwert lassen.
 
+      chat_fields:
+        type: fields
+        fields:
+          chat_headline:
+            label: Chatverlauf
+            type: headline
+          chat_persistence:
+            label: Chatverlauf im Browser speichern
+            type: toggle
+            default: false
+            text:
+              - Nur bis zum Neuladen
+              - 24 Stunden im Browser behalten
+            help: >
+              An: Der Chat wird im Browser des Besuchers (localStorage)
+              gespeichert und übersteht so ein Neuladen der Seite. Er bleibt
+              dabei auf dem Gerät des Besuchers — er wird nicht übertragen und
+              ist für uns nicht einsehbar. Nach 24 Stunden wird er verworfen,
+              und der Besucher kann ihn jederzeit über den Papierkorb in der
+              Kopfzeile selbst löschen.
+
       rag_workflow:
         type: fabby-rag
         label: RAG
