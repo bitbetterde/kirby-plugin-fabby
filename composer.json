@@ -2,7 +2,7 @@
     "name": "bitbetter/fabby",
     "description": "LLM-based chatbot for Kirby with chat, speech, RAG search, a website widget and Panel settings",
     "type": "kirby-plugin",
-    "license": "AGPL-3.0-only",
+    "license": "MIT",
     "homepage": "https://github.com/bitbetterde/kirby-plugin-fabby",
     "authors": [
         {
