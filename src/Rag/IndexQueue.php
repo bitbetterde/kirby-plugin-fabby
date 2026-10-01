@@ -41,6 +41,21 @@ final class IndexQueue
         $this->upsert($pageKey, $pageId, $operation, time());
     }
 
+    /** Search can request a refresh without resetting retries or pending deletes. */
+    public function enqueueIfMissing(string $pageKey, string $pageId): void
+    {
+        $stmt = $this->db()->prepare(
+            "INSERT INTO fabby_queue
+                (page_key, page_id, operation, enqueued_at, attempts, revision, last_error)
+             VALUES (:key, :id, 'upsert', :now, 0, 1, NULL)
+             ON CONFLICT(page_key) DO NOTHING"
+        );
+        $stmt->bindValue(':key', $pageKey, SQLITE3_TEXT);
+        $stmt->bindValue(':id', $pageId, SQLITE3_TEXT);
+        $stmt->bindValue(':now', time(), SQLITE3_INTEGER);
+        $stmt->execute();
+    }
+
     /**
      * Atomically orders the old-key deletion before the new-key operation.
      * Explicit timestamps also preserve that order when either key already

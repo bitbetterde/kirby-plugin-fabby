@@ -9,6 +9,11 @@ Dieses Repository enthält den installationsfertigen Stand des Plugins. Es ist
 zum Ausrollen gedacht, nicht zum Entwickeln: das Repository ist der
 Plugin-Ordner und wird unverändert nach `site/plugins/` gelegt.
 
+## Lizenz
+
+Dieses Plugin steht unter der GNU Affero General Public License, Version 3
+(`AGPL-3.0-only`). Der vollständige Lizenztext steht in [LICENSE](LICENSE).
+
 ## Voraussetzungen
 
 | | |
@@ -153,5 +158,23 @@ gar nicht erst angezeigt und können seine Felder auch nicht schreiben.
 Wer die Technik-Einstellungen pflegen soll, braucht also die Rolle `admin` —
 zuweisen lässt sich die im Panel unter *Benutzer*, ohne Deployment.
 
+Die technischen Werte werden für andere Rollen auch aus der Seiten-API und
+den gespeicherten sowie ungespeicherten Panel-Inhalten entfernt. Die interne
+Konfiguration liest weiterhin die vollständigen Werte.
 
+Suchtreffer werden vor der Ausgabe mit dem aktuell extrahierten Seiteninhalt
+verglichen. Veraltete Treffer, auch mit inzwischen zurückgezogenen Inhalten
+verknüpfter Seiten, werden sofort ausgeblendet. Die betroffene Quellseite wird
+bei der Suche zur Aktualisierung vorgemerkt; bis zur Verarbeitung fehlen ihre
+Treffer vorübergehend. Ein vollständiger Neuaufbau ist dafür nicht nötig.
 
+Beim Umbenennen oder Verschieben einer übergeordneten Seite werden auch alle
+Unterseiten zur Aktualisierung vorgemerkt. Mit UUIDs aktualisiert der Worker
+unveränderte Inhalte ohne erneute Embeddings; ohne UUIDs entfernt er die alten
+Pfad-Einträge und indexiert die neuen. Entwürfe und ausgeschlossene Unterseiten
+werden dabei aus dem Index entfernt. Diese Fälle lassen sich mit
+`php tests/lifecycle.php` ohne externe API-Aufrufe prüfen.
+
+Die Sicherheitsregressionen lassen sich ohne externe API-Aufrufe mit
+`php tests/security.php` im Plugin-Verzeichnis prüfen. Bei abweichendem
+Installationspfad kann `FABBY_KIRBY_ROOT` auf die Kirby-Site zeigen.

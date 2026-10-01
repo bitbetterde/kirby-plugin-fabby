@@ -42,10 +42,32 @@ final class PageLifecycleHandler
     {
         $newKey = ContentExtractor::pageKey($newPage);
         $oldKey = $this->oldPageKey($oldPage, $newKey);
+        $this->syncChanged($newPage, $newKey, $oldKey, $oldPage->id());
+
+        if ($newPage->id() === $oldPage->id()) {
+            return;
+        }
+
+        // A parent rename/move changes every descendant's id and URL, but
+        // Kirby fires the lifecycle hook only for the parent. Read the fresh
+        // subtree: the old subtree's directories have already moved.
+        // Include drafts so obsolete index entries and pending jobs are
+        // deleted instead of migrated into searchable content.
+        foreach ($newPage->index(true) as $descendant) {
+            $newKey = ContentExtractor::pageKey($descendant);
+            $oldId = $oldPage->id() . substr($descendant->id(), strlen($newPage->id()));
+            $oldKey = str_starts_with($newKey, 'page://') ? $newKey : 'page-id://' . $oldId;
+
+            $this->syncChanged($descendant, $newKey, $oldKey, $oldId);
+        }
+    }
+
+    private function syncChanged(Page $newPage, string $newKey, string $oldKey, string $oldId): void
+    {
         $document = $this->document($newPage);
 
         if ($document === null) {
-            $this->queueDelete($oldKey, $oldPage->id());
+            $this->queueDelete($oldKey, $oldId);
 
             if ($newKey !== $oldKey) {
                 $this->queueDelete($newKey, $newPage->id());
@@ -60,7 +82,7 @@ final class PageLifecycleHandler
             try {
                 $this->queue->enqueueTransition(
                     $oldKey,
-                    $oldPage->id(),
+                    $oldId,
                     $newKey,
                     $newPage->id(),
                     IndexQueue::OP_UPSERT

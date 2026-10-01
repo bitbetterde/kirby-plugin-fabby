@@ -508,6 +508,21 @@ function fabbyInjectWidget(string $html, string $contentType, Page $page): strin
     return substr($html, 0, $bodyEnd) . $embed . substr($html, $bodyEnd);
 }
 
+/** The settings editor belongs to Site, but has its own menu entry. */
+function fabbySettingsMenuCurrent(?string $current): bool
+{
+    if ($current !== 'site') {
+        return false;
+    }
+
+    $kirby = App::instance();
+    $slug = trim((string) $kirby->option('panel.slug', 'panel'), '/');
+    $path = trim($kirby->path(), '/');
+    $settings = $slug . '/pages/fabby-settings';
+
+    return $path === $settings || str_starts_with($path, $settings . '/');
+}
+
 App::plugin('ontostory/fabby', [
     'api' => [
         // Authentication is explicit so future API defaults cannot expose
@@ -609,6 +624,10 @@ App::plugin('ontostory/fabby', [
         'fabby' => __DIR__ . '/snippets/fabby.php',
     ],
 
+    'pageModels' => [
+        'fabby-settings' => Fabby\Config\SettingsPage::class,
+    ],
+
     'sections' => [
         'fabby-rag' => [
             'props' => [
@@ -640,31 +659,17 @@ App::plugin('ontostory/fabby', [
     // laeuft aber ins Leere — gleiche Einschraenkung wie beim Tab-Kommentar
     // weiter unten.
     'areas' => [
+        'site' => fn (): array => [
+            // View::props also resolves area callbacks without arguments.
+            'current' => fn (?string $current = null): bool =>
+                $current === 'site' && !fabbySettingsMenuCurrent($current),
+        ],
         'fabby' => fn (): array => [
             'label' => 'Fabby',
             'icon' => 'chat',
             'menu' => true,
             'link' => 'pages/fabby-settings',
-            // Kirby markiert einen Menueeintrag als aktiv, wenn die Id der
-            // gerade gerenderten Area mit der Id des Eintrags uebereinstimmt
-            // (Panel\Menu::isCurrent). Diese Area hat aber keine eigene View;
-            // ihr Link fuehrt in die Kern-Area `site`. Die Id passt also nie,
-            // und der Eintrag bliebe fuer immer inaktiv. `current` erlaubt
-            // eine eigene Entscheidung: aktiv, sobald der Panel-Pfad die
-            // Einstellungsseite ist. Der Panel-Slug ist konfigurierbar,
-            // deshalb wird er aus der Option gelesen statt hart verdrahtet.
-            'current' => function (string|null $current): bool {
-                if ($current !== 'site') {
-                    return false;
-                }
-
-                $kirby = App::instance();
-                $slug  = trim((string)$kirby->option('panel.slug', 'panel'), '/');
-                $path  = trim($kirby->path(), '/');
-
-                return $path === $slug . '/pages/fabby-settings'
-                    || str_starts_with($path, $slug . '/pages/fabby-settings/');
-            },
+            'current' => fn (?string $current = null): bool => fabbySettingsMenuCurrent($current),
             'dialogs' => [
                 'fabby.rag.rebuild' => array_merge(
                     ['pattern' => 'fabby/rag/rebuild'],
@@ -785,6 +790,12 @@ App::plugin('ontostory/fabby', [
         },
         'system.loadPlugins:after' => function () {
             $kirby = kirby();
+
+            // Use the host Kirby's Page schema, with redacted settings content.
+            // Custom models are resolved before Kirby's generic Page model.
+            $kirby->extend(['api' => ['models' => [
+                'FabbySettings' => Fabby\Config\SettingsPage::apiDefinition($kirby),
+            ]]]);
 
             if ($kirby->page('fabby-settings') !== null) {
                 return;

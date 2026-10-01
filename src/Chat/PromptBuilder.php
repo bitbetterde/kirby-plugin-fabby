@@ -38,17 +38,11 @@ final class PromptBuilder
         $block .= "Heute ist: {$currentDate} ({$currentDay}. {$currentMonthName} {$currentYear})\n";
         $block .= "Aktueller Monat: {$currentMonth} ({$currentMonthName})\n\n";
         $block .= "WICHTIG - Event Filterung:\n";
-        $block .= "- Zeige NUR Events die NACH dem heutigen Datum liegen\n";
-        $block .= "- Events im Jahr {$currentYear} in den Monaten 1-{$currentMonth} "
-            . "(Januar-{$currentMonthName}) sind VORBEI\n";
-        $block .= "- Events im {$currentMonthName} {$currentYear} die vor dem {$currentDay}. "
-            . "stattfanden sind VORBEI\n";
-
-        $nextMonthDate = $now->modify('first day of next month');
-        $nextMonthName = self::MONTH_NAMES_DE[(int) $nextMonthDate->format('n')];
-        $nextMonthYear = (int) $nextMonthDate->format('Y');
-
-        $block .= "- Events ab {$nextMonthName} {$nextMonthYear} sind gültig\n";
+        $block .= "- Zeige NUR Events die NACH dem heutigen Datum ({$currentDate}) liegen\n";
+        $block .= "- Events vor oder am {$currentDate} dürfen nicht als kommende Events aufgelistet werden\n";
+        $block .= "- Events nach dem {$currentDate} sind gültig, auch wenn sie noch im "
+            . "{$currentMonthName} {$currentYear} stattfinden\n";
+        $block .= "- Vergleiche das vollständige Veranstaltungsdatum (Tag, Monat und Jahr), nicht nur den Monat\n";
         $block .= "- Liste KEINE vergangenen Events auf!\n";
 
         return $basePrompt . $block;

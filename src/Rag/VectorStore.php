@@ -502,6 +502,7 @@ final class VectorStore
                 chunkIndex: (int) $row['chunk_index'],
                 similarity: $cosine,
                 pageKey: (string) $row['page_key'],
+                contentHash: (string) $row['content_hash'],
             );
 
             $candidates[$key] = [
@@ -600,7 +601,7 @@ final class VectorStore
     private function lexicalWithFts(array $tokens, string $model, int $dims, int $poolSize): array
     {
         $stmt = $this->db->prepare(
-            'SELECT c.id, c.page_key, c.page_id, c.url, c.title, c.chunk_text, c.chunk_index,
+            'SELECT c.id, c.page_key, c.page_id, c.url, c.title, c.chunk_text, c.chunk_index, c.content_hash,
                     bm25(fabby_fts, 2.0, 1.0) AS lexical_rank
              FROM fabby_fts f
              JOIN fabby_chunks c ON c.id = f.rowid
@@ -706,7 +707,7 @@ final class VectorStore
     private function lexicalBruteForce(array $tokens, string $model, int $dims): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, page_key, page_id, url, title, chunk_text, chunk_index
+            'SELECT id, page_key, page_id, url, title, chunk_text, chunk_index, content_hash
              FROM fabby_chunks
              WHERE embedding_model = :model AND dims = :dims
                AND index_fingerprint = :fingerprint'
@@ -738,7 +739,7 @@ final class VectorStore
     private function searchWithVec(array $query, string $model, int $topK): array
     {
         $stmt = $this->db->prepare(
-            'SELECT c.page_key, c.page_id, c.url, c.title, c.chunk_text, c.chunk_index, v.distance
+            'SELECT c.page_key, c.page_id, c.url, c.title, c.chunk_text, c.chunk_index, c.content_hash, v.distance
              FROM fabby_vec v
              JOIN fabby_chunks c ON c.id = v.chunk_id
              WHERE v.embedding MATCH :vec AND k = :k
@@ -769,6 +770,7 @@ final class VectorStore
                 chunkIndex: (int) $row['chunk_index'],
                 similarity: 1.0 - ($distance * $distance) / 2.0,
                 pageKey: (string) $row['page_key'],
+                contentHash: (string) $row['content_hash'],
             );
 
             if (count($hits) >= $topK) {
@@ -793,7 +795,7 @@ final class VectorStore
     private function searchBruteForce(array $query, string $model, int $topK): array
     {
         $stmt = $this->db->prepare(
-            'SELECT page_key, page_id, url, title, chunk_text, chunk_index, embedding
+            'SELECT page_key, page_id, url, title, chunk_text, chunk_index, content_hash, embedding
              FROM fabby_chunks
              WHERE embedding_model = :model AND dims = :dims
                AND index_fingerprint = :fingerprint'
@@ -833,6 +835,7 @@ final class VectorStore
                 chunkIndex: (int) $e['row']['chunk_index'],
                 similarity: $e['s'],
                 pageKey: (string) $e['row']['page_key'],
+                contentHash: (string) $e['row']['content_hash'],
             ),
             $best
         );

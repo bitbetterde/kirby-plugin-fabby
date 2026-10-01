@@ -161,7 +161,11 @@ final class ToolRegistry
         return new KnowledgeSearchTool(
             RagFactory::store($config),
             RagFactory::embeddings($config),
-            new SearchHitVisibility($config->kirby(), RagFactory::extractor($config))
+            new SearchHitVisibility(
+                $config->kirby(),
+                RagFactory::extractor($config),
+                RagFactory::queue($config)
+            )
         );
     }
 

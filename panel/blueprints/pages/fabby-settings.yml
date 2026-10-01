@@ -279,8 +279,8 @@ tabs:
             text: >
               Diese Werte landen als Klartext in der Content-Datei dieser
               Seite (nicht im Git-Repo, da `content/` grundsätzlich nicht
-              versioniert wird) und sind für jeden mit Panel-Zugriff auf diese
-              Seite sichtbar. Ein hier eingetragener Wert hat Vorrang vor der
+              versioniert wird). Im Panel und in der Seiten-API sind sie nur
+              für Administratoren sichtbar. Ein hier eingetragener Wert hat Vorrang vor der
               Kirby-Konfiguration und einer Server-Umgebungsvariable (z.B.
               FABBY_OPENAI_API_KEY in der .env). Bleibt das Feld leer, dienen
               diese externen Werte weiterhin als Fallback.
@@ -315,7 +315,7 @@ tabs:
             type: text
             help: Kein Geheimnis im engeren Sinn, aber Teil derselben Google-CSE-Konfiguration.
 
-          chat_headline:
+          chat_api_headline:
             label: Antworten (Chat)
             type: headline
           llm_provider:

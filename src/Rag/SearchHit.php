@@ -17,6 +17,8 @@ final class SearchHit
         public readonly float $similarity,
         /** Stable Kirby UUID URI, falling back to the page id when UUIDs are disabled. */
         public readonly string $pageKey = '',
+        /** Hash of the extracted document from which this chunk was stored. */
+        public readonly string $contentHash = '',
     ) {
     }
 }
