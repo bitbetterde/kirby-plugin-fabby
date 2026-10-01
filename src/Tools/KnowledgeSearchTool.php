@@ -9,10 +9,10 @@ use Fabby\Rag\VectorStore;
 /**
  * Semantic search over the site's own Kirby pages.
  *
- * The reason this exists next to web_search: www.fab-bergisch.org renders
- * client-side, so its delivered HTML contains almost no text and an external
- * search engine can only index fragments. Running inside the CMS, this tool
- * reads the content tree directly and can cite the exact page.
+ * The reason this exists next to web_search: a site that renders
+ * client-side delivers HTML with almost no text, so an external search engine
+ * can only index fragments. Running inside the CMS, this tool reads the
+ * content tree directly and can cite the exact page.
  *
  * execute() never throws. FabbyService feeds the returned string straight back
  * to the model, so a failure has to read as a sentence the model can recover

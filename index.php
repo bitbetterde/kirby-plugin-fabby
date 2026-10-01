@@ -9,7 +9,6 @@ use Kirby\Cms\Page;
 use Kirby\Cms\User;
 use Kirby\Data\Data;
 use Kirby\Exception\PermissionException;
-use Kirby\Filesystem\F;
 
 /**
  * Registers this plugin's own PSR-4 autoloading (Fabby\ -> src/) without
@@ -801,15 +800,12 @@ App::plugin('bitbetter/fabby', [
                 return;
             }
 
-            // Der Basis-Prompt wird hier EINMAL in die Content-Datei
-            // geschrieben, nicht als `default:` im Blueprint hinterlegt: Ein
-            // Blueprint-Default taucht bei jedem leeren Feld wieder auf und
-            // sieht dann gespeichert aus, obwohl nichts gespeichert waere.
-            // Ohne diese Vorbelegung startet eine Neuinstallation mit leerem
-            // Pflichtfeld, und das Modell bekaeme nur den Datumsblock.
-            $defaultPrompt = F::read(__DIR__ . '/config/default-prompt.txt');
-
-            $kirby->impersonate('kirby', function () use ($kirby, $defaultPrompt) {
+            // Das Plugin liefert bewusst keinen Basis-Prompt mit: Er ist
+            // inhaltlich an die jeweilige Site gebunden und gehoert in deren
+            // Content, nicht ins Repository. Eine Neuinstallation startet
+            // deshalb mit leerem Pflichtfeld `system_prompt`; bis es im Panel
+            // gefuellt ist, bekommt das Modell nur den Datumsblock.
+            $kirby->impersonate('kirby', function () use ($kirby) {
                 $page = $kirby->site()->createChild([
                     'slug' => 'fabby-settings',
                     'template' => 'fabby-settings',
@@ -817,7 +813,6 @@ App::plugin('bitbetter/fabby', [
                     'isDraft' => false,
                     'content' => [
                         'title' => 'Fabby',
-                        'system_prompt' => trim((string) $defaultPrompt),
                     ],
                 ]);
 

@@ -101,14 +101,7 @@ tabs:
                 type: textarea
                 when:
                   name: web_search
-                default: |
-                  https://www.fab-bergisch.org/
-                  https://www.cscp.org/
-                  https://www.cscp.org/library/publications/
-                  https://gruenderschmiede.org/
-                  https://www.glaeserne-werkstatt-solingen.de/
-                  https://www.fab-bergisch.org/aktuelles/events/
-                  https://www.gut-einern.org/
+                help: Leer = die Suche ist nicht auf bestimmte Domains beschränkt.
               rag_top_k:
                 label: Anzahl Treffer (Top-K)
                 type: number
@@ -333,7 +326,7 @@ tabs:
             label: Completion API Basis-URL
             type: url
             default: https://api.openai.com/v1
-            placeholder: http://100.68.73.25:8080/v1
+            placeholder: http://localhost:8080/v1
             help: >
               URL bis einschließlich des API-Präfixes, meist `/v1`. Ein
               abschließender Schrägstrich ist optional; Fabby ergänzt
@@ -371,7 +364,7 @@ tabs:
           rag_embedding_base_url:
             label: Embedding API Basis-URL (optional)
             type: url
-            placeholder: http://100.68.73.25:8080/v1
+            placeholder: http://localhost:8080/v1
             help: >
               Leer = Completion API Basis-URL. Fabby ergänzt `/embeddings`.
           rag_embedding_model:
@@ -414,7 +407,7 @@ tabs:
           rag_base_url:
             label: Basis-URL für Quellenangaben (optional)
             type: text
-            placeholder: https://www.fab-bergisch.org
+            placeholder: https://www.example.org
             help: >
               Wird den Seiten-URLs in den Suchergebnissen vorangestellt, damit der
               Chatbot einen vollständigen Link ausgeben kann. Leer = die
@@ -441,6 +434,15 @@ tabs:
           limits_headline:
             label: API-Schutz
             type: headline
+          cors_allowed_origins:
+            label: Zusätzlich erlaubte Origins (eine pro Zeile)
+            type: textarea
+            buttons: false
+            placeholder: https://www.example.org
+            help: >
+              Die eigene Domain der Kirby-Site ist immer erlaubt. Hier nur
+              weitere Websites eintragen, die das Widget einbinden und die API
+              aus dem Browser aufrufen dürfen.
           rate_limit_info:
             type: info
             theme: notice

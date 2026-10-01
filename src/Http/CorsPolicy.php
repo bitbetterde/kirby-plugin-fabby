@@ -2,22 +2,12 @@
 
 namespace Fabby\Http;
 
+use Fabby\Config\FabbyConfig;
 use Kirby\Cms\App;
 
 /** Shared CORS policy for the public API and cross-origin Unity assets. */
 final class CorsPolicy
 {
-    private const ALLOWED_ORIGINS = [
-        'http://fabby-web.localhost',
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'https://fabby-dev.it-demo.de',
-        'https://fabby-dev-onto.it-demo.de',
-        'https://www.fab-bergisch.org',
-        'https://fab-bergisch.org',
-        'https://fabby.fab-bergisch.org',
-    ];
-
     public static function requestOrigin(): ?string
     {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
@@ -94,7 +84,9 @@ final class CorsPolicy
     /** @return string[] */
     private static function allowedOrigins(App $kirby): array
     {
-        $origins = self::ALLOWED_ORIGINS;
+        // The site's own origin is always allowed. Any further origin comes
+        // from the Panel setting, so the plugin ships without fixed hosts.
+        $origins = (new FabbyConfig($kirby))->corsAllowedOrigins();
         $index = (string) $kirby->url('index');
         $parts = parse_url($index);
 

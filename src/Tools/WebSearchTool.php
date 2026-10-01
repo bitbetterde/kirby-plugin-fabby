@@ -23,7 +23,7 @@ final class WebSearchTool implements ToolExecutorInterface
     {
         return [
             'name' => 'web_search',
-            'description' => 'Search for information about FAB Bergisch events, projects, news, and circular economy topics. Always use this for questions about events or current information.',
+            'description' => 'Search the web for current information such as events, news and projects.',
             'parameterSchema' => [
                 'type' => 'object',
                 'properties' => [

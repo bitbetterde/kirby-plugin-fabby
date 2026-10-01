@@ -160,6 +160,19 @@ class FabbyConfig
         return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
     }
 
+    /**
+     * Origins that may call the API from the browser in addition to the
+     * site's own origin, one per line in the Panel.
+     *
+     * @return string[]
+     */
+    public function corsAllowedOrigins(): array
+    {
+        $value = (string) $this->setting('cors_allowed_origins', '');
+
+        return array_values(array_filter(array_map('trim', explode("\n", $value))));
+    }
+
     /** @return array{session: int, ip: int, daily: int} */
     public function rateLimits(string $action): array
     {
