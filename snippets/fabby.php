@@ -18,6 +18,10 @@
  * @var Kirby\Cms\App $kirby
  */
 
+if (!(new Fabby\Config\FabbyConfig(kirby()))->widgetEnabled()) {
+    return;
+}
+
 $assets = fabbyAssetUrls();
 
 ?>

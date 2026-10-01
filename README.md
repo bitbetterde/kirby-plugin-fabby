@@ -48,6 +48,11 @@ Beim nächsten Seitenaufruf legt das Plugin die Seite `fabby-settings`
 automatisch in `content/` an, inklusive des Basis-Prompts aus
 `config/default-prompt.txt`. Im Panel erscheint links ein Menüpunkt **Fabby**.
 
+Das Frontend-Widget wird erst eingebunden, wenn ein LLM-API-Key konfiguriert
+ist. Ohne Key erzeugt auch `snippet('fabby')` keine Ausgabe. Der bisherige
+OpenAI-Key sowie Keys aus der Kirby-Konfiguration oder Umgebung gelten
+weiterhin als Fallback; der Panel-Zugang bleibt unabhängig davon verfügbar.
+
 Der PHP-Prozess braucht Schreibrechte auf `content/` (für die Settings-Seite)
 und auf `site/logs/` (für den RAG-Index).
 

@@ -32,7 +32,7 @@ function normalizeStatus(status) {
   return result;
 }
 
-panel.plugin("ontostory/fabby", {
+panel.plugin("bitbetter/fabby", {
   sections: {
     "fabby-rag": {
       mixins: ["section"],
@@ -234,12 +234,12 @@ panel.plugin("ontostory/fabby", {
           this.$panel.dialog.open({
             component: "k-text-dialog",
             props: {
-              text: `<p><strong>Gesamte Wissensdatenbank neu erstellen?</strong></p>
+              text: `<p><strong>Gesamte Wissensdatenbank zurücksetzen?</strong></p>
                 <p>Der bestehende Index wird geleert und alle ${this.current.eligible}
                 Seiten werden erneut an die Embedding-API geschickt. Dadurch entstehen
                 API-Kosten. Der Vorgang ist nur nach Änderungen an Modell, Basis-URL
                 oder Abschnittsgröße nötig.</p>`,
-              submitButton: "Kostenpflichtig neu erstellen",
+              submitButton: "Kostenpflichtig zurücksetzen",
               theme: "negative"
             },
             on: {
@@ -354,7 +354,7 @@ panel.plugin("ontostory/fabby", {
                 variant="filled"
                 @click="prepareAndProcess(false)"
               >
-                Index prüfen und aktualisieren
+                Wissensdatenbank prüfen und aktualisieren
               </k-button>
               <k-button
                 icon="trash"
@@ -362,7 +362,7 @@ panel.plugin("ontostory/fabby", {
                 :disabled="running || isLoading"
                 @click="confirmForce"
               >
-                Gesamte Wissensdatenbank neu erstellen
+                Gesamte Wissensdatenbank zurücksetzen
               </k-button>
             </k-button-group>
           </div>

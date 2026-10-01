@@ -2,6 +2,7 @@
 
 namespace Fabby\Http\Controllers;
 
+use Fabby\Config\FabbyConfig;
 use Fabby\Http\CorsPolicy;
 use Kirby\Cms\App;
 use Kirby\Http\Response;
@@ -47,7 +48,7 @@ final class AssetController
 
     public static function handle(App $kirby, string $path): Response
     {
-        $base = $kirby->plugin('ontostory/fabby')?->root() . '/assets';
+        $base = $kirby->plugin('bitbetter/fabby')?->root() . '/assets';
         $real = realpath($base);
 
         if ($real === false) {
@@ -58,6 +59,16 @@ final class AssetController
 
         if ($file === null) {
             return new Response('Nicht gefunden.', 'text/plain', 404);
+        }
+
+        // Legacy embeds load these files directly, without the Kirby snippet.
+        // Keep the disabled response out of caches so adding a key takes effect
+        // on the next request. Other assets (including the Panel) stay usable.
+        if (
+            in_array($file, [$real . '/widget/main.min.js', $real . '/widget/styles.min.css'], true)
+            && !(new FabbyConfig($kirby))->widgetEnabled()
+        ) {
+            return new Response('', static::contentType($file), 200, ['Cache-Control' => 'no-store']);
         }
 
         // Streamed, not returned as a Response body: see the class docblock.
@@ -171,12 +182,13 @@ final class AssetController
     }
 
     /**
-     * Two cache policies, because only one kind of URL can be versioned.
+     * Widget assets must revalidate because their availability depends on
+     * the configured API key, not just the file's version.
      *
      * The bundle and the stylesheet are requested by URLs the snippet
      * builds, so they carry a `?v=` mtime stamp (fabbyAssetUrls() in
-     * index.php) and a replaced file is a new URL — safe to cache for a
-     * year.
+     * index.php). Revalidation also covers legacy URLs without that stamp
+     * and lets the handler suppress a previously enabled widget.
      *
      * The Unity files are NOT: the loader appends its own filenames to the
      * bare directory in `window.fabby_assets`, so their URLs never change
@@ -191,7 +203,7 @@ final class AssetController
         $versionable = str_contains($file, DIRECTORY_SEPARATOR . 'widget' . DIRECTORY_SEPARATOR);
 
         return $versionable
-            ? 'public, max-age=31536000, immutable'
+            ? 'public, no-cache'
             : 'public, max-age=0, must-revalidate';
     }
 }

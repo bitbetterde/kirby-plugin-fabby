@@ -56,7 +56,7 @@ class FabbyConfig
             return $value;
         }
 
-        $value = $this->kirby->option('ontostory.fabby.' . $name);
+        $value = $this->kirby->option('bitbetter.fabby.' . $name);
 
         if (is_string($value) && $value !== '') {
             return $value;
@@ -87,6 +87,12 @@ class FabbyConfig
     public function llmApiKey(): string
     {
         return $this->secret('llm_api_key') ?: $this->secret('openai_api_key');
+    }
+
+    /** Frontend embeds stay absent until a completion API key is configured. */
+    public function widgetEnabled(): bool
+    {
+        return trim($this->llmApiKey()) !== '';
     }
 
     public function model(): string

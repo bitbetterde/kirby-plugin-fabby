@@ -179,7 +179,7 @@ tabs:
             type: toggle
             default: true
             help: >
-              Merkt Seiten beim Speichern automatisch für die Neu-Indexierung vor.
+              Merkt Seiten beim Speichern automatisch für die Neu-Indexierung vor. Wenn deaktiviert, muss eine Neu-Indexierung immer manuell ausgelöst werden.
           rag_listed_only:
             label: Nur gelistete Seiten indizieren
             type: toggle

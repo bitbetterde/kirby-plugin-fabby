@@ -448,7 +448,7 @@ function fabbyTechnikFields(): array
  */
 function fabbyAssetUrls(): array
 {
-    $plugin = kirby()->plugin('ontostory/fabby');
+    $plugin = kirby()->plugin('bitbetter/fabby');
     $root = $plugin?->root() . '/assets';
     $base = kirby()->url('index') . '/fabby/assets';
 
@@ -523,7 +523,7 @@ function fabbySettingsMenuCurrent(?string $current): bool
     return $path === $settings || str_starts_with($path, $settings . '/');
 }
 
-App::plugin('ontostory/fabby', [
+App::plugin('bitbetter/fabby', [
     'api' => [
         // Authentication is explicit so future API defaults cannot expose
         // paid maintenance actions. Every authenticated Panel role is allowed.
