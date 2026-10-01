@@ -1,18 +1,15 @@
 # Fabby — Kirby-Plugin
 
-Chat-Assistent für die FAB Region. Das Plugin liefert das Backend (Chat, TTS,
+LLM-basierter Chatbot für Seiten auf Basis des [fab-kirby-Projekts](https://github.com/bitbetterde/fab-kirby). Das Plugin liefert das Backend (Chat, TTS,
 STT, RAG-Suche), das Widget für die Website und eine Panel-Seite, über die
 LLM-Provider, Modell, System-Prompt und Tools ohne Serverzugriff gepflegt
 werden.
 
+Die Unity-Modelle in diesem Plugin [wurden von der onto[story] GmbH erstellt](https://www.ontostory.com/developing-fabby-a-character-driven-campaign-for-a-sustainable-future/).
+
 Dieses Repository enthält den installationsfertigen Stand des Plugins. Es ist
 zum Ausrollen gedacht, nicht zum Entwickeln: das Repository ist der
 Plugin-Ordner und wird unverändert nach `site/plugins/` gelegt.
-
-## Lizenz
-
-Dieses Plugin steht unter der GNU Affero General Public License, Version 3
-(`AGPL-3.0-only`). Der vollständige Lizenztext steht in [LICENSE](LICENSE).
 
 ## Voraussetzungen
 
@@ -47,11 +44,6 @@ Einstiegspunkt, an dem Kirby das Plugin erkennt.
 Beim nächsten Seitenaufruf legt das Plugin die Seite `fabby-settings`
 automatisch in `content/` an, inklusive des Basis-Prompts aus
 `config/default-prompt.txt`. Im Panel erscheint links ein Menüpunkt **Fabby**.
-
-Das Frontend-Widget wird erst eingebunden, wenn ein LLM-API-Key konfiguriert
-ist. Ohne Key erzeugt auch `snippet('fabby')` keine Ausgabe. Der bisherige
-OpenAI-Key sowie Keys aus der Kirby-Konfiguration oder Umgebung gelten
-weiterhin als Fallback; der Panel-Zugang bleibt unabhängig davon verfügbar.
 
 Der PHP-Prozess braucht Schreibrechte auf `content/` (für die Settings-Seite)
 und auf `site/logs/` (für den RAG-Index).
@@ -183,3 +175,4 @@ werden dabei aus dem Index entfernt. Diese Fälle lassen sich mit
 Die Sicherheitsregressionen lassen sich ohne externe API-Aufrufe mit
 `php tests/security.php` im Plugin-Verzeichnis prüfen. Bei abweichendem
 Installationspfad kann `FABBY_KIRBY_ROOT` auf die Kirby-Site zeigen.
+
